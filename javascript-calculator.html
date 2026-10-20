@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0c1726" />
+  <meta name="description" content="A responsive React JavaScript calculator with keyboard support and precise expression evaluation." />
+  <title>Orbit Calculator | freeCodeCamp</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --page: #0c1726;
+      --card: #17253b;
+      --ink: #f7fafc;
+      --muted: #94a5bc;
+      --line: rgba(255,255,255,.09);
+      --lime: #c6fa85;
+      --normal: #263651;
+    }
+    * { box-sizing: border-box; }
+    html { min-height: 100%; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      min-height: 100dvh;
+      background: radial-gradient(circle at 14% 15%, rgba(90, 139, 203, .16), transparent 31%),
+                  radial-gradient(circle at 89% 80%, rgba(134, 245, 171, .1), transparent 27%), var(--page);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    #root { min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding: 40px 18px; }
+    .shell { width: min(100%, 426px); }
+    .eyebrow { display: flex; align-items: center; gap: 9px; color: #bdc9d8; font-size: 12px; font-weight: 750; letter-spacing: .17em; text-transform: uppercase; margin-bottom: 18px; }
+    .eyebrow .mark { display: grid; place-items: center; width: 28px; height: 28px; border: 1px solid #7c9c96; border-radius: 9px; font-size: 18px; color: var(--lime); }
+    .title { font-size: clamp(28px, 5vw, 38px); line-height: 1.05; letter-spacing: -.06em; font-weight: 780; margin: 0 0 10px; }
+    .subtitle { margin: 0 0 28px; color: var(--muted); font-size: 14px; line-height: 1.55; }
+    .calculator { border: 1px solid rgba(255,255,255,.17); border-radius: 24px; padding: 17px; background: linear-gradient(155deg, rgba(31,48,73,.98),rgba(16,28,46,.98)); box-shadow: 0 30px 75px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.06); }
+    .calculator-top { display: flex; align-items: center; justify-content: space-between; padding: 6px 9px 15px; }
+    .tiny-label { display: flex; align-items: center; gap: 8px; font-size: 11px; letter-spacing: .13em; color: #d4deeb; font-weight: 700; }
+    .status-dot { width: 6px; height: 6px; display: inline-block; background: var(--lime); border-radius: 50%; box-shadow: 0 0 12px rgba(198,250,133,.55); }
+    .mode { font-size: 10px; letter-spacing: .12em; color: #91a5c0; font-weight: 750; }
+    .screen { text-align: right; background: #0c1728; border: 1px solid #34425a; box-shadow: inset 0 8px 20px rgba(0,0,0,.18); border-radius: 16px; padding: 22px 20px; min-height: 126px; display: flex; flex-direction: column; justify-content: space-between; margin-bottom: 17px; }
+    .formula { min-height: 21px; font-size: 14px; color: #9aacc3; overflow-wrap: anywhere; }
+    #display { font-size: clamp(34px, 9vw, 52px); font-weight: 650; letter-spacing: -.045em; line-height: 1.15; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+    .buttons { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: repeat(5, 68px); gap: 10px; }
+    .key { border: 1px solid rgba(255,255,255,.06); border-radius: 13px; background: var(--normal); color: var(--ink); font: inherit; font-size: 22px; font-weight: 580; cursor: pointer; transition: transform .12s ease, background .12s ease, box-shadow .12s ease; user-select: none; -webkit-tap-highlight-color: transparent; }
+    .key:hover { background: #354968; }
+    .key:active { transform: scale(.95); }
+    .key:focus-visible { outline: 3px solid #9ed3ff; outline-offset: 2px; }
+    .key--operator { background: #35465b; color: #daf4fb; font-size: 25px; }
+    .key--operator:hover { background: #425b76; }
+    .key--clear { grid-column: span 2; background: rgba(238,125,136,.16); border-color: rgba(238,125,136,.25); color: #ff9eab; font-size: 16px; font-weight: 800; letter-spacing: .07em; }
+    .key--clear:hover { background: rgba(238,125,136,.25); }
+    .key--zero { grid-column: span 2; }
+    .key--equals { grid-column: 4; grid-row: 4 / 6; color: #132321; background: var(--lime); border-color: rgba(255,255,255,.17); font-size: 32px; font-weight: 760; }
+    .key--equals:hover { background: #dafaac; box-shadow: 0 0 30px rgba(198,250,133,.16); }
+    .foot { color: #758ca7; display: flex; justify-content: space-between; font-size: 11px; line-height: 1.5; padding: 17px 4px 0; gap: 10px; }
+    .keyboard { text-align: right; }
+    @media (max-width: 430px) {
+      #root { padding: 20px 14px; }
+      .subtitle { margin-bottom: 20px; }
+      .calculator { padding: 12px; border-radius: 20px; }
+      .buttons { grid-template-rows: repeat(5, minmax(56px, 14vw)); gap: 8px; }
+      .screen { min-height: 112px; padding: 20px 15px; }
+      .key { border-radius: 10px; }
+      .foot { flex-direction: column; gap: 1px; }
+      .keyboard { text-align: left; }
+    }
+    @media (prefers-reduced-motion: reduce) { .key { transition: none; } }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- React 17 avoids the known React 18/freeCodeCamp test incompatibilities. -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/17.0.2/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/17.0.2/umd/react-dom.production.min.js"></script>
+  <script>
+    (function () {
+      'use strict';
+      const h = React.createElement;
+
+      // Evaluate a numeric expression using standard order of operations.
+      // This small parser handles unary minus and does not execute arbitrary JS.
+      function calculate(expression) {
+        const tokens = expression.match(/\d+(?:\.\d*)?|\.\d+|[+*/-]/g) || [];
+        if (tokens.join('') !== expression) throw new Error('Invalid expression');
+        let i = 0;
+
+        function unary() {
+          if (tokens[i] === '-') { i++; return -unary(); }
+          if (tokens[i] === '+') { i++; return unary(); }
+          const token = tokens[i++];
+          if (token === undefined || !/^(?:\d+(?:\.\d*)?|\.\d+)$/.test(token)) {
+            throw new Error('Expected number');
+          }
+          return Number(token);
+        }
+        function multiplyDivide() {
+          let value = unary();
+          while (tokens[i] === '*' || tokens[i] === '/') {
+            const op = tokens[i++];
+            const right = unary();
+            value = op === '*' ? value * right : value / right;
+          }
+          return value;
+        }
+        function addSubtract() {
+          let value = multiplyDivide();
+          while (tokens[i] === '+' || tokens[i] === '-') {
+            const op = tokens[i++];
+            const right = multiplyDivide();
+            value = op === '+' ? value + right : value - right;
+          }
+          return value;
+        }
+        const result = addSubtract();
+        if (i !== tokens.length || !Number.isFinite(result)) throw new Error('Invalid result');
+        const rounded = Number(result.toPrecision(12));
+        return Object.is(rounded, -0) ? '0' : String(rounded);
+      }
+
+      function lastNumber(expression) {
+        const withUnaryMinus = expression.match(/(?:^|[+*/])(-\d+(?:\.\d*)?)$/);
+        if (withUnaryMinus) return withUnaryMinus[1];
+        const normal = expression.match(/(\d+(?:\.\d*)?)$/);
+        return normal ? normal[1] : '0';
+      }
+      function pretty(expression) {
+        return expression.replace(/\*/g, '×').replace(/\//g, '÷').replace(/-/g, '−');
+      }
+      function operationKey(value) {
+        return value === '*' ? '×' : value === '/' ? '÷' : value === '-' ? '−' : value;
+      }
+
+      const KEYS = [
+        { id: 'clear', label: 'AC', value: 'AC', className: 'key--clear' },
+        { id: 'divide', label: '/', value: '/', className: 'key--operator' },
+        { id: 'multiply', label: '*', value: '*', className: 'key--operator' },
+        { id: 'seven', label: '7', value: '7' },
+        { id: 'eight', label: '8', value: '8' },
+        { id: 'nine', label: '9', value: '9' },
+        { id: 'subtract', label: '-', value: '-', className: 'key--operator' },
+        { id: 'four', label: '4', value: '4' },
+        { id: 'five', label: '5', value: '5' },
+        { id: 'six', label: '6', value: '6' },
+        { id: 'add', label: '+', value: '+', className: 'key--operator' },
+        { id: 'one', label: '1', value: '1' },
+        { id: 'two', label: '2', value: '2' },
+        { id: 'three', label: '3', value: '3' },
+        { id: 'equals', label: '=', value: '=', className: 'key--equals' },
+        { id: 'zero', label: '0', value: '0', className: 'key--zero' },
+        { id: 'decimal', label: '.', value: '.' }
+      ];
+
+      class Calculator extends React.Component {
+        constructor(props) {
+          super(props);
+          this.state = { expression: '0', display: '0', evaluated: false, lastFormula: '' };
+          this.press = this.press.bind(this);
+          this.keyDown = this.keyDown.bind(this);
+          this.clear = this.clear.bind(this);
+        }
+        componentDidMount() { window.addEventListener('keydown', this.keyDown); }
+        componentWillUnmount() { window.removeEventListener('keydown', this.keyDown); }
+        clear() { this.setState({ expression: '0', display: '0', evaluated: false, lastFormula: '' }); }
+
+        press(key) {
+          if (key === 'AC') { this.clear(); return; }
+          this.setState(prev => {
+            let expr = prev.expression;
+            if (/^[0-9]$/.test(key)) {
+              if (prev.evaluated) expr = key;
+              else {
+                const match = expr.match(/(\d+(?:\.\d*)?)$/);
+                const current = match ? match[1] : '';
+                if (current === '0') {
+                  if (key !== '0') expr = expr.slice(0, -1) + key;
+                } else expr += key;
+              }
+              return { expression: expr, display: lastNumber(expr), evaluated: false, lastFormula: '' };
+            }
+            if (key === '.') {
+              if (prev.evaluated) expr = '0.';
+              else {
+                const match = expr.match(/(\d+(?:\.\d*)?)$/);
+                const current = match ? match[1] : '';
+                if (current.includes('.')) return null;
+                expr += current ? '.' : '0.';
+              }
+              return { expression: expr, display: lastNumber(expr), evaluated: false, lastFormula: '' };
+            }
+            if (['+', '-', '*', '/'].includes(key)) {
+              if (/[+*/-]$/.test(expr)) {
+                if (key === '-') {
+                  // A minus sign after an operator can start a negative operand.
+                  if (!expr.endsWith('-')) expr += '-';
+                  else if (/[0-9.]-$/.test(expr)) expr += '-';
+                } else {
+                  // Keep only the most recent operator, including after unary minus.
+                  expr = expr.replace(/[+*/-]+$/, '') || '0';
+                  expr += key;
+                }
+              } else expr += key;
+              return { expression: expr, display: operationKey(key), evaluated: false, lastFormula: '' };
+            }
+            if (key === '=') {
+              if (prev.evaluated) return null;
+              const cleaned = expr.replace(/[+*/-]+$/, '');
+              if (!cleaned) return null;
+              try {
+                const answer = calculate(cleaned);
+                return { expression: answer, display: answer, evaluated: true, lastFormula: pretty(cleaned) + ' =' };
+              } catch (e) {
+                return { expression: '0', display: 'Error', evaluated: true, lastFormula: pretty(cleaned) };
+              }
+            }
+            if (key === 'BACKSPACE') {
+              if (prev.evaluated) return { expression: '0', display: '0', evaluated: false, lastFormula: '' };
+              expr = expr.length <= 1 ? '0' : expr.slice(0, -1);
+              return { expression: expr, display: lastNumber(expr), evaluated: false, lastFormula: '' };
+            }
+            return null;
+          });
+        }
+        keyDown(e) {
+          if (e.ctrlKey || e.metaKey || e.altKey) return;
+          if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+          let key = e.key;
+          if (key === 'Enter') key = '=';
+          if (key === 'Escape' || key === 'Delete') key = 'AC';
+          if (key === 'Backspace') key = 'BACKSPACE';
+          if (key === 'x' || key === 'X') key = '*';
+          if ('0123456789+-*/.='.includes(key) || key === 'AC' || key === 'BACKSPACE') {
+            e.preventDefault();
+            this.press(key);
+          }
+        }
+        render() {
+          const state = this.state;
+          return h('main', { className: 'shell' },
+            h('div', { className: 'eyebrow' }, h('span', { className: 'mark', 'aria-hidden': 'true' }, '◈'), 'ORBIT / UTILITIES'),
+            h('h1', { className: 'title' }, 'Make it count.'),
+            h('p', { className: 'subtitle' }, 'A little space for big calculations.'),
+            h('section', { className: 'calculator', 'aria-label': 'JavaScript Calculator' },
+              h('div', { className: 'calculator-top' },
+                h('span', { className: 'tiny-label' }, h('span', { className: 'status-dot' }), 'CALCULATOR'),
+                h('span', { className: 'mode' }, 'STANDARD / 01')
+              ),
+              h('div', { className: 'screen' },
+                h('div', { className: 'formula', 'aria-label': 'Expression' }, state.lastFormula || pretty(state.expression)),
+                h('div', { id: 'display', role: 'status', 'aria-live': 'polite', 'aria-atomic': 'true' }, state.display)
+              ),
+              h('div', { className: 'buttons', 'aria-label': 'Calculator keys' },
+                KEYS.map(item => h('button', {
+                  key: item.id, id: item.id, type: 'button',
+                  className: 'key' + (item.className ? ' ' + item.className : ''),
+                  'aria-label': item.id === 'clear' ? 'All clear' : item.id === 'multiply' ? 'Multiply' : item.id === 'divide' ? 'Divide' : item.id === 'subtract' ? 'Subtract' : item.id === 'add' ? 'Add' : item.id === 'equals' ? 'Equals' : item.label,
+                  onClick: () => this.press(item.value)
+                }, item.label))
+              )
+            ),
+            h('div', { className: 'foot' },
+              h('span', null, 'Made for the freeCodeCamp challenge'),
+              h('span', { className: 'keyboard' }, 'Keyboard friendly · React 17')
+            )
+          );
+        }
+      }
+      ReactDOM.render(h(Calculator), document.getElementById('root'));
+    })();
+  </script>
+  <script src="https://cdn.freecodecamp.org/testable-projects-fcc/v1/bundle.js"></script>
+</body>
+</html>
